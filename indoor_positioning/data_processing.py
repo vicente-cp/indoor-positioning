@@ -62,4 +62,4 @@ def acc_df(data_parser, calibrated=True):
     b, a = acc_butter_filter()
     filtered_acc = filter_signal(non_filtered_acc, b, a)
 
-    return pd.DataFrame(data={"tss":tss, "non_filtered_acc": non_filtered_acc, "filtered_acc": filtered_acc})
+    return pd.DataFrame(data={"tss": tss, "non_filtered_acc": non_filtered_acc, "filtered_acc": filtered_acc})

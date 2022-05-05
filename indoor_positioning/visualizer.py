@@ -1,8 +1,11 @@
 import pandas as pd
 import numpy as np
+import os
 import plotly.graph_objs as go
 import plotly.express as px
 import plotly.offline as pyo
+
+from PIL import Image
 
 
 def save_go_fig(figure, filename):
@@ -35,15 +38,58 @@ def figures_to_html(figs, filename, add_js=True):
         File name to save in.
 
     '''
-    with open(filename, 'w') as dashboard:
-        dashboard.write("<html><head></head><body>" + "\n")
+    if not(os.path.isfile(filename)):
+        with open(filename, 'w') as dashboard:
+            dashboard.write("<html><head></head><body>" + "\n")
 
-        for fig in figs:
+            for fig in figs:
 
-            inner_html = pyo.plot(
-                fig, include_plotlyjs=add_js, output_type='div'
-            )
+                inner_html = pyo.plot(
+                    fig, include_plotlyjs=add_js, output_type='div'
+                )
 
-            dashboard.write(inner_html)
+                dashboard.write(inner_html)
 
-        dashboard.write("</body></html>" + "\n")
+            dashboard.write("</body></html>" + "\n")
+
+
+def fig_acc_filter(acc_df):
+    return px.line(acc_df, x="tss", y=["non_filtered_acc", "filtered_acc"])
+
+
+def fig_all_waypoints(floorplan, waypoint_list):
+    fig = go.Figure()
+
+    # add floor plan
+    floor_plan = Image.open(floorplan["floor_image"])
+    fig.update_layout(images=[
+        go.layout.Image(
+            source=floor_plan,
+            xref="x",
+            yref="y",
+            x=0,
+            y=floorplan["height"],
+            sizex=floorplan["width"],
+            sizey=floorplan["height"],
+            sizing="contain",
+            opacity=1,
+            layer="below",
+        )
+    ])
+
+    # configure
+    fig.update_xaxes(autorange=False, range=[0, floorplan["width"]])
+    fig.update_yaxes(autorange=False, range=[0, floorplan["height"]], scaleanchor="x", scaleratio=1)
+    fig.update_layout(
+        title=go.layout.Title(
+            text="No title.",
+            xref="paper",
+            x=0,
+        ),
+        autosize=True,
+        width=900,
+        height=200 + 900 * floorplan["height"] / floorplan["width"],
+        template="plotly_white",
+    )
+
+    return fig

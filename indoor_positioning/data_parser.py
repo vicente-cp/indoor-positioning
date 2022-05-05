@@ -1,5 +1,9 @@
+import glob
 import re
+import numpy as np
+import json
 
+from pathlib import Path
 from dataclasses import dataclass
 from trace import Trace
 from typing import NewType
@@ -35,16 +39,16 @@ METADATA_NAMES = {
 # The lambda function is used as a replacement for the case function
 
 SENSOR_TYPES = {
-    "TYPE_ACCELEROMETER": {"name": "acc_calib", "mapping": lambda x: (x[0], (x[2], x[3], x[4]))},
-    "TYPE_MAGNETIC_FIELD": {"name": "mag_calib", "mapping": lambda x: (x[0], (x[2], x[3], x[4]))},
-    "TYPE_GYROSCOPE": {"name": "gyro_calib", "mapping": lambda x: (x[0], (x[2], x[3], x[4]))},
-    "TYPE_ROTATION_VECTOR": {"name": "rotation_vector", "mapping": lambda x: (x[0], (x[2], x[3], x[4]))},
+    "TYPE_ACCELEROMETER": {"name": "acc_calib", "mapping": lambda x: (x[0], (x[2], x[3], x[4].replace("\n", "")))},
+    "TYPE_MAGNETIC_FIELD": {"name": "mag_calib", "mapping": lambda x: (x[0], (x[2], x[3], x[4].replace("\n", "")))},
+    "TYPE_GYROSCOPE": {"name": "gyro_calib", "mapping": lambda x: (x[0], (x[2], x[3], x[4].replace("\n", "")))},
+    "TYPE_ROTATION_VECTOR": {"name": "rotation_vector", "mapping": lambda x: (x[0], (x[2], x[3], x[4].replace("\n", "")))},
     "TYPE_ACCELEROMETER_UNCALIBRATED": {"name":  "acc_uncalib", "mapping": lambda x: (x[0], (x[2], x[3], x[4]))},
     "TYPE_MAGNETIC_FIELD_UNCALIBRATED": {"name": "mag_uncalib", "mapping": lambda x: (x[0], (x[2], x[3], x[4]))},
     "TYPE_GYROSCOPE_UNCALIBRATED": {"name": "gyro_uncalib", "mapping": lambda x: (x[0], (x[2], x[3], x[4]))},
     "TYPE_WIFI": {"name": "wifi", "mapping": lambda x:  (x[0], (x[2], x[3], x[4]))},
     "TYPE_BEACON": {"name": "beacon", "mapping": lambda x: (x[0], ("_".join([x[2], x[3], x[4]]), x[6]))},
-    "TYPE_WAYPOINT": {"name": "waypoint", "mapping": lambda x: (x[0],  (x[2], x[3]))}
+    "TYPE_WAYPOINT": {"name": "waypoint", "mapping": lambda x: (x[0],  (x[2], x[3].replace("\n", "")))}
 }
 
 
@@ -118,3 +122,38 @@ def tracing_parser(trace_filename: str) -> TraceData:
             trace_data_kwargs[sensor_name].append(sensor_values)
 
     return TraceData(**trace_data_kwargs)
+
+
+def waypoint_list(map_folder):
+    """From the dir of a map folder, returns a list of all the waypoints in said map
+
+    Args:
+        map_folder (str): DIR of the map
+
+    Returns:
+        list(float, float): List of the waypoint pairs in the map
+    """
+    tracefiles = glob.glob(map_folder + "/*.txt", recursive=True)
+    waypoints = []
+    for file in tracefiles:
+        print("Parsing {}".format(file))
+        parsed = tracing_parser(file)
+        waypoints += [[xyz[1][0], xyz[1][1]] for xyz in parsed.waypoint]
+
+    map_waypoints = np.unique(np.array(waypoints, dtype="float32"))
+    return map_waypoints
+
+
+def floorplan(metadata_path, floor_folder_dir):
+    floorplan = {}
+    floorplan_dir = metadata_path + "/".join(Path(floor_folder_dir).parts[1:])
+    floorplan_info = floorplan_dir + "/floor_info.json"
+    floorplan_image = floorplan_dir + "/floor_image.png"
+    with open(floorplan_info) as f:
+        floor_info = json.load(f)
+    width_meter = floor_info["map_info"]["width"]
+    height_meter = floor_info["map_info"]["height"]
+    floorplan["width"] = width_meter
+    floorplan["height"] = height_meter
+    floorplan["floor_image"] = floorplan_image
+    return floorplan
