@@ -140,7 +140,7 @@ def waypoint_list(map_folder):
         parsed = tracing_parser(file)
         waypoints += [[xyz[1][0], xyz[1][1]] for xyz in parsed.waypoint]
 
-    map_waypoints = np.unique(np.array(waypoints, dtype="float32"))
+    map_waypoints = np.unique(np.array(waypoints, dtype="float32"), axis=0)
     return map_waypoints
 
 

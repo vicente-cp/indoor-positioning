@@ -11,11 +11,15 @@ VENUE_DIR = DATASET_DIR + "/" + venue_id + "/"
 METADATA_DIR = "./dataset/metadata/"
 OUTPUT_DIR = './output/'
 TSS_HISTOGRAMS_DIR = OUTPUT_DIR + "tss_hist/"
+WAYPOINTS_DIR = OUTPUT_DIR + "waypoints/"
+
 
 if __name__ == "__main__":
     Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
     Path(TSS_HISTOGRAMS_DIR).mkdir(parents=True, exist_ok=True)
     Path(TSS_HISTOGRAMS_DIR + venue_id).mkdir(parents=True, exist_ok=True)
+    Path(WAYPOINTS_DIR).mkdir(parents=True, exist_ok=True)
+    Path(WAYPOINTS_DIR + venue_id).mkdir(parents=True, exist_ok=True)
 
     # Specific tracing file selection
 
@@ -27,9 +31,7 @@ if __name__ == "__main__":
     # Floor data
 
     floor_folder_dir = str(Path(tracing_test_filename).parent)
-    # waypoint_list = data_parser.waypoint_list(floor_folder_dir)
     floorplan = data_parser.floorplan(METADATA_DIR, floor_folder_dir)
-
 
 
     "1.1 -- Visualizing tss difference"
@@ -43,20 +45,27 @@ if __name__ == "__main__":
         tss = [xyz[0] for xyz in sensors_to_viz[sensor]]
         histogram_figs.append(visualizer.viz_histogram_tss_diff(tss))
 
-    html_filename = TSS_HISTOGRAMS_DIR + venue_id + "/" + tracing_test_id + ".html"
+    histogram_html = TSS_HISTOGRAMS_DIR + venue_id + "/" + tracing_test_id + ".html"
 
-    visualizer.figures_to_html(histogram_figs, html_filename)
+    visualizer.figures_to_html(histogram_figs, histogram_html)
 
     "1.2 Visualazing Filtering"
 
-    acc_df = data_processing.acc_df(parsed_data)
+    acc_df = data_processing.acc_df(parsed_data, filt_type="filtfilt")
     acc_filter_fig = visualizer.fig_acc_filter(acc_df)
-    acc_filter_fig.show()
+    # acc_filter_fig.show()
+
+    mag_df = data_processing.mag_df(parsed_data)
+
+    
 
 
     "1.3 Waypoints viz"
 
-    waypoints_fig = visualizer.fig_all_waypoints(floorplan, [])
+    waypoint_list = data_parser.waypoint_list(floor_folder_dir)
 
+    waypoints_fig = visualizer.fig_all_waypoints(floorplan, waypoint_list)
+    waypoints_html = WAYPOINTS_DIR + venue_id + "/" + tracing_test_id + ".html"
+    visualizer.figures_to_html([waypoints_fig], waypoints_html)
 
     

@@ -38,19 +38,18 @@ def figures_to_html(figs, filename, add_js=True):
         File name to save in.
 
     '''
-    if not(os.path.isfile(filename)):
-        with open(filename, 'w') as dashboard:
-            dashboard.write("<html><head></head><body>" + "\n")
+    with open(filename, 'w') as dashboard:
+        dashboard.write("<html><head></head><body>" + "\n")
 
-            for fig in figs:
+        for fig in figs:
 
-                inner_html = pyo.plot(
-                    fig, include_plotlyjs=add_js, output_type='div'
-                )
+            inner_html = pyo.plot(
+                fig, include_plotlyjs=add_js, output_type='div'
+            )
 
-                dashboard.write(inner_html)
+            dashboard.write(inner_html)
 
-            dashboard.write("</body></html>" + "\n")
+        dashboard.write("</body></html>" + "\n")
 
 
 def fig_acc_filter(acc_df):
@@ -77,12 +76,25 @@ def fig_all_waypoints(floorplan, waypoint_list):
         )
     ])
 
+    # add key positions
+
+    color_keypoints = "rgba(10, 180, 10, 0.5)"
+
+    fig.add_trace(
+        go.Scattergl(
+            x=waypoint_list[:, 0],
+            y=waypoint_list[:, 1],
+            mode="markers",
+            marker=dict(size=10, color=color_keypoints),
+            name='Waypoints',
+        ))
+
     # configure
     fig.update_xaxes(autorange=False, range=[0, floorplan["width"]])
     fig.update_yaxes(autorange=False, range=[0, floorplan["height"]], scaleanchor="x", scaleratio=1)
     fig.update_layout(
         title=go.layout.Title(
-            text="No title.",
+            text="Waypoint positions",
             xref="paper",
             x=0,
         ),
