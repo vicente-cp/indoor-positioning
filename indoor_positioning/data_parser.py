@@ -1,4 +1,5 @@
 import glob
+from math import floor
 import re
 import numpy as np
 import json
@@ -39,16 +40,16 @@ METADATA_NAMES = {
 # The lambda function is used as a replacement for the case function
 
 SENSOR_TYPES = {
-    "TYPE_ACCELEROMETER": {"name": "acc_calib", "mapping": lambda x: (x[0], (x[2], x[3], x[4].replace("\n", "")))},
-    "TYPE_MAGNETIC_FIELD": {"name": "mag_calib", "mapping": lambda x: (x[0], (x[2], x[3], x[4].replace("\n", "")))},
-    "TYPE_GYROSCOPE": {"name": "gyro_calib", "mapping": lambda x: (x[0], (x[2], x[3], x[4].replace("\n", "")))},
-    "TYPE_ROTATION_VECTOR": {"name": "rotation_vector", "mapping": lambda x: (x[0], (x[2], x[3], x[4].replace("\n", "")))},
+    "TYPE_ACCELEROMETER": {"name": "acc_calib", "mapping": lambda x: (x[0], (x[2], x[3], x[4]))},
+    "TYPE_MAGNETIC_FIELD": {"name": "mag_calib", "mapping": lambda x: (x[0], (x[2], x[3], x[4]))},
+    "TYPE_GYROSCOPE": {"name": "gyro_calib", "mapping": lambda x: (x[0], (x[2], x[3], x[4]))},
+    "TYPE_ROTATION_VECTOR": {"name": "rotation_vector", "mapping": lambda x: (x[0], (x[2], x[3], x[4]))},
     "TYPE_ACCELEROMETER_UNCALIBRATED": {"name":  "acc_uncalib", "mapping": lambda x: (x[0], (x[2], x[3], x[4]))},
     "TYPE_MAGNETIC_FIELD_UNCALIBRATED": {"name": "mag_uncalib", "mapping": lambda x: (x[0], (x[2], x[3], x[4]))},
     "TYPE_GYROSCOPE_UNCALIBRATED": {"name": "gyro_uncalib", "mapping": lambda x: (x[0], (x[2], x[3], x[4]))},
     "TYPE_WIFI": {"name": "wifi", "mapping": lambda x:  (x[0], (x[2], x[3], x[4]))},
     "TYPE_BEACON": {"name": "beacon", "mapping": lambda x: (x[0], ("_".join([x[2], x[3], x[4]]), x[6]))},
-    "TYPE_WAYPOINT": {"name": "waypoint", "mapping": lambda x: (x[0],  (x[2], x[3].replace("\n", "")))}
+    "TYPE_WAYPOINT": {"name": "waypoint", "mapping": lambda x: (x[0],  (x[2], x[3]))}
 }
 
 
@@ -114,6 +115,7 @@ def tracing_parser(trace_filename: str) -> TraceData:
 
         else:
             split_line = line.split("\t")
+            split_line[-1] = split_line[-1].replace("\n", "")
             sensor_name = SENSOR_TYPES[split_line[1]]["name"]
             sensor_values = SENSOR_TYPES[split_line[1]]["mapping"](
                 split_line
@@ -149,6 +151,7 @@ def floorplan(metadata_path, floor_folder_dir):
     floorplan_dir = metadata_path + "/".join(Path(floor_folder_dir).parts[1:])
     floorplan_info = floorplan_dir + "/floor_info.json"
     floorplan_image = floorplan_dir + "/floor_image.png"
+    floorplan_geojson = floorplan_dir + "/geojson_map.json"
     with open(floorplan_info) as f:
         floor_info = json.load(f)
     width_meter = floor_info["map_info"]["width"]
@@ -156,4 +159,5 @@ def floorplan(metadata_path, floor_folder_dir):
     floorplan["width"] = width_meter
     floorplan["height"] = height_meter
     floorplan["floor_image"] = floorplan_image
+    floorplan["floor_geojson"] = floorplan_geojson
     return floorplan
