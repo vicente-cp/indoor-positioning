@@ -147,6 +147,15 @@ def waypoint_list(map_folder):
 
 
 def floorplan(metadata_path, floor_folder_dir):
+    """Retrieval of the metmadata associated to a respective floor
+
+    Args:
+        metadata_path (str): Absolute or relative path of the metadata folder
+        floor_folder_dir (str): Absolute or relative path of a floor folder
+
+    Returns:
+        dict: Dictionary which includes the metadata of a floor
+    """
     floorplan = {}
     floorplan_dir = metadata_path + "/".join(Path(floor_folder_dir).parts[1:])
     floorplan_info = floorplan_dir + "/floor_info.json"
